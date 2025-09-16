@@ -4,33 +4,34 @@ import com.projectmanager.backend.application.dto.UsuarioCadastroDTO;
 import com.projectmanager.backend.application.dto.UsuarioDTO;
 import com.projectmanager.backend.domain.model.Usuario;
 import com.projectmanager.backend.domain.repository.UsuarioRepository;
-import org.springframework.http.HttpStatus;
+import com.projectmanager.backend.infrastructure.exception.ConflitoDeDadosException;
+import com.projectmanager.backend.infrastructure.exception.RecursoNaoEncontradoException;
+import com.projectmanager.backend.utils.Validators;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
-        this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UsuarioDTO cadastrarUsuario(UsuarioCadastroDTO dto) {
         if (usuarioRepository.existsByLogin(dto.getLogin())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Login já existe.");
+            throw new ConflitoDeDadosException("Login '" + dto.getLogin() + "' já existe.");
         }
         if (usuarioRepository.existsByCpf(dto.getCpf())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já existe.");
+            throw new ConflitoDeDadosException("CPF '" + dto.getCpf() + "' já existe.");
         }
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já existe.");
+            throw new ConflitoDeDadosException("E-mail '" + dto.getEmail() + "' já existe.");
         }
 
         Usuario usuario = new Usuario();
@@ -39,7 +40,7 @@ public class UsuarioService {
         usuario.setEmail(dto.getEmail());
         usuario.setCargo(dto.getCargo());
         usuario.setLogin(dto.getLogin());
-        usuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Criptografa a senha
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setPerfil(dto.getPerfil());
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
@@ -54,23 +55,27 @@ public class UsuarioService {
 
     public UsuarioDTO buscarUsuarioPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário", id)); // Lança nossa exceção customizada
         return convertToDto(usuario);
     }
 
     public UsuarioDTO atualizarUsuario(Long id, UsuarioCadastroDTO dto) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário", id));
+
+        if (!Validators.isCpfValido(dto.getCpf())) {
+            throw new ConflitoDeDadosException("CPF '" + dto.getCpf() + "' é inválido.");
+        }
 
         // Validar unicidade para campos que não podem ser repetidos
         if (!usuario.getLogin().equals(dto.getLogin()) && usuarioRepository.existsByLogin(dto.getLogin())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Login já existe.");
+            throw new ConflitoDeDadosException("Login '" + dto.getLogin() + "' já existe.");
         }
         if (!usuario.getCpf().equals(dto.getCpf()) && usuarioRepository.existsByCpf(dto.getCpf())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já existe.");
+            throw new ConflitoDeDadosException("CPF '" + dto.getCpf() + "' já existe.");
         }
         if (!usuario.getEmail().equals(dto.getEmail()) && usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já existe.");
+            throw new ConflitoDeDadosException("E-mail '" + dto.getEmail() + "' já existe.");
         }
 
         usuario.setNomeCompleto(dto.getNomeCompleto());
@@ -78,10 +83,6 @@ public class UsuarioService {
         usuario.setEmail(dto.getEmail());
         usuario.setCargo(dto.getCargo());
         usuario.setLogin(dto.getLogin());
-        // A senha só deve ser atualizada se for realmente alterada (dto.getSenha() !=
-        // null && !dto.getSenha().isEmpty())
-        // Por enquanto, para simplificar, atualizaremos sempre, mas o ideal é ter um
-        // DTO de atualização diferente.
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setPerfil(dto.getPerfil());
 
@@ -91,12 +92,11 @@ public class UsuarioService {
 
     public void deletarUsuario(Long id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado.");
+            throw new RecursoNaoEncontradoException("Usuário", id);
         }
         usuarioRepository.deleteById(id);
     }
 
-    // Método utilitário para converter Entidade para DTO
     private UsuarioDTO convertToDto(Usuario usuario) {
         return new UsuarioDTO(
                 usuario.getId(),
