@@ -2,7 +2,9 @@ package com.projectmanager.backend.domain.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate; // Usando LocalDate, que é mais moderno que java.util.Date
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "projetos")
@@ -34,6 +36,11 @@ public class Projeto {
     @ManyToOne(fetch = FetchType.LAZY) // Um projeto tem um responsável
     @JoinColumn(name = "responsavel_id", nullable = false)
     private Usuario responsavel;
+
+    // NOVO RELACIONAMENTO: Lado "dono" da relação Projeto-Equipe
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "projeto_equipes", joinColumns = @JoinColumn(name = "projeto_id"), inverseJoinColumns = @JoinColumn(name = "equipe_id"))
+    private Set<Equipe> equipes = new HashSet<>();
 
     public Projeto() {
         // Construtor Padrão
@@ -102,6 +109,25 @@ public class Projeto {
 
     public void setResponsavel(Usuario responsavel) {
         this.responsavel = responsavel;
+    }
+
+    public Set<Equipe> getEquipes() {
+        return equipes;
+    }
+
+    public void setEquipes(Set<Equipe> equipes) {
+        this.equipes = equipes;
+    }
+
+    // --- Métodos de domínio para gerenciar equipes ---
+    public void adicionarEquipe(Equipe equipe) {
+        this.equipes.add(equipe);
+        equipe.getProjetos().add(this);
+    }
+
+    public void removerEquipe(Equipe equipe) {
+        this.equipes.remove(equipe);
+        equipe.getProjetos().remove(this);
     }
 
     // --- equals e hashCode ---

@@ -49,4 +49,16 @@ public class ProjetoController {
         projetoService.deletarProjeto(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{projetoId}/equipes/{equipeId}")
+    public ResponseEntity<ProjetoDTO> adicionarEquipe(@PathVariable Long projetoId, @PathVariable Long equipeId) {
+        ProjetoDTO projetoAtualizado = projetoService.adicionarEquipeAoProjeto(projetoId, equipeId);
+        return ResponseEntity.ok(projetoAtualizado);
+    }
+
+    @DeleteMapping("/{projetoId}/equipes/{equipeId}")
+    public ResponseEntity<Void> removerEquipe(@PathVariable Long projetoId, @PathVariable Long equipeId) {
+        projetoService.removerEquipeDoProjeto(projetoId, equipeId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -2,6 +2,7 @@ package com.projectmanager.backend.application.dto;
 
 import com.projectmanager.backend.domain.model.StatusProjeto;
 import java.time.LocalDate;
+import java.util.List;
 
 public class ProjetoDTO {
     private Long id;
@@ -11,7 +12,8 @@ public class ProjetoDTO {
     private LocalDate dataPrevFim;
     private LocalDate dataRealFim;
     private StatusProjeto status;
-    private UsuarioDTO responsavel; // Reutilizamos o UsuarioDTO que já temos
+    private UsuarioDTO responsavel;
+    private List<EquipeDTO> equipes;
 
     // Construtores, Getters e Setters
     public Long getId() {
@@ -76,5 +78,13 @@ public class ProjetoDTO {
 
     public void setResponsavel(UsuarioDTO responsavel) {
         this.responsavel = responsavel;
+    }
+
+    public List<EquipeDTO> getEquipes() {
+        return equipes;
+    }
+
+    public void setEquipes(List<EquipeDTO> equipes) {
+        this.equipes = equipes;
     }
 }
