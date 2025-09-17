@@ -3,7 +3,10 @@ package com.projectmanager.backend.presentation.controller;
 import com.projectmanager.backend.application.dto.ProjetoCadastroDTO;
 import com.projectmanager.backend.application.dto.ProjetoDTO;
 import com.projectmanager.backend.application.dto.ProjetoUpdateDTO;
+import com.projectmanager.backend.application.dto.TarefaDTO;
 import com.projectmanager.backend.application.service.ProjetoService;
+import com.projectmanager.backend.application.service.TarefaService;
+
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,9 @@ public class ProjetoController {
 
     @Autowired
     private ProjetoService projetoService;
+
+    @Autowired
+    private TarefaService tarefaService;
 
     @PostMapping
     public ResponseEntity<ProjetoDTO> criarProjeto(@RequestBody @Valid ProjetoCadastroDTO dto) {
@@ -60,5 +66,11 @@ public class ProjetoController {
     public ResponseEntity<Void> removerEquipe(@PathVariable Long projetoId, @PathVariable Long equipeId) {
         projetoService.removerEquipeDoProjeto(projetoId, equipeId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{projetoId}/tarefas")
+    public ResponseEntity<List<TarefaDTO>> listarTarefasDoProjeto(@PathVariable Long projetoId) {
+        List<TarefaDTO> tarefas = tarefaService.listarTarefasPorProjeto(projetoId);
+        return ResponseEntity.ok(tarefas);
     }
 }

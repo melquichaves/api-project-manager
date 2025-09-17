@@ -4,99 +4,99 @@ import com.projectmanager.backend.infrastructure.exception.ConflitoDeDadosExcept
 import com.projectmanager.backend.infrastructure.exception.RecursoNaoEncontradoException;
 import com.projectmanager.backend.presentation.exception.dto.ErroPadraoDTO;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException; // Manter para compatibilidade com código antigo
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 
-@RestControllerAdvice // Anotação para tratamento global de exceções em controladores REST
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RecursoNaoEncontradoException.class)
-    public ResponseEntity<ErroPadraoDTO> handleRecursoNaoEncontradoException(
-            RecursoNaoEncontradoException ex, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.NOT_FOUND;
-        ErroPadraoDTO erro = new ErroPadraoDTO(
-                status.value(),
-                status.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI());
-        return new ResponseEntity<>(erro, status);
-    }
+        private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(ConflitoDeDadosException.class)
-    public ResponseEntity<ErroPadraoDTO> handleConflitoDeDadosException(
-            ConflitoDeDadosException ex, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.CONFLICT;
-        ErroPadraoDTO erro = new ErroPadraoDTO(
-                status.value(),
-                status.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI());
-        return new ResponseEntity<>(erro, status);
-    }
+        @ExceptionHandler(RecursoNaoEncontradoException.class)
+        public ResponseEntity<ErroPadraoDTO> handleRecursoNaoEncontradoException(
+                        RecursoNaoEncontradoException ex, HttpServletRequest request) {
+                HttpStatus status = HttpStatus.NOT_FOUND;
+                ErroPadraoDTO erro = new ErroPadraoDTO(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return new ResponseEntity<>(erro, status);
+        }
 
-    // --- Tratamento de Erros de Validação (@Valid) ---
+        @ExceptionHandler(ConflitoDeDadosException.class)
+        public ResponseEntity<ErroPadraoDTO> handleConflitoDeDadosException(
+                        ConflitoDeDadosException ex, HttpServletRequest request) {
+                HttpStatus status = HttpStatus.CONFLICT;
+                ErroPadraoDTO erro = new ErroPadraoDTO(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return new ResponseEntity<>(erro, status);
+        }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErroPadraoDTO> handleValidationExceptions(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
+        // Seu handler de validação, que já está excelente:
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ErroPadraoDTO> handleValidationExceptions(
+                        MethodArgumentNotValidException ex, HttpServletRequest request) {
+                HttpStatus status = HttpStatus.BAD_REQUEST;
+                List<String> errors = ex.getBindingResult().getAllErrors().stream()
+                                .map(error -> {
+                                        String fieldName = ((FieldError) error).getField();
+                                        String errorMessage = error.getDefaultMessage();
+                                        return fieldName + ": " + errorMessage;
+                                })
+                                .toList();
+                ErroPadraoDTO erro = new ErroPadraoDTO(
+                                status.value(),
+                                "Bad Request",
+                                "Erro de validação nos dados da requisição.",
+                                request.getRequestURI(),
+                                errors);
+                return new ResponseEntity<>(erro, status);
+        }
 
-        List<String> errors = ex.getBindingResult().getAllErrors().stream()
-                .map(error -> {
-                    String fieldName = ((FieldError) error).getField();
-                    String errorMessage = error.getDefaultMessage();
-                    return fieldName + ": " + errorMessage;
-                })
-                .toList();
+        @ExceptionHandler(ResponseStatusException.class)
+        public ResponseEntity<ErroPadraoDTO> handleResponseStatusException(
+                        ResponseStatusException ex, HttpServletRequest request) {
+                HttpStatus status = (HttpStatus) ex.getStatusCode();
+                ErroPadraoDTO erro = new ErroPadraoDTO(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getReason(),
+                                request.getRequestURI());
+                return new ResponseEntity<>(erro, status);
+        }
 
-        ErroPadraoDTO erro = new ErroPadraoDTO(
-                status.value(),
-                "Bad Request", // ou status.getReasonPhrase()
-                "Erro de validação nos dados da requisição.",
-                request.getRequestURI(),
-                errors);
-        return new ResponseEntity<>(erro, status);
-    }
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ErroPadraoDTO> handleGenericException(
+                        Exception ex, HttpServletRequest request) {
+                HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+                String errorId = UUID.randomUUID().toString();
 
-    // --- Tratamento de outras ResponseStatusException (que podem vir do Spring,
-    // como 400, 401, 403, 500) ---
-    // Este handler é mais genérico e pode capturar exceções geradas diretamente
-    // pelo Spring ou por outros serviços
-    // que lançam ResponseStatusException (como fizemos anteriormente no
-    // UsuarioService)
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErroPadraoDTO> handleResponseStatusException(
-            ResponseStatusException ex, HttpServletRequest request) {
-        HttpStatus status = (HttpStatus) ex.getStatusCode();
-        ErroPadraoDTO erro = new ErroPadraoDTO(
-                status.value(),
-                status.getReasonPhrase(),
-                ex.getReason(), // Pega a mensagem definida na ResponseStatusException
-                request.getRequestURI());
-        return new ResponseEntity<>(erro, status);
-    }
+                logger.error("Erro interno do servidor. ID do erro: {}", errorId, ex);
 
-    // --- Tratamento de exceções genéricas (catch-all) ---
-    // Garante que nenhuma exceção vaze sem um tratamento padronizado. Sempre
-    // retorne 500 Internal Server Error.
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErroPadraoDTO> handleGenericException(
-            Exception ex, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        // Logar a exceção completa aqui é crucial para depuração
-        ex.printStackTrace();
-        ErroPadraoDTO erro = new ErroPadraoDTO(
-                status.value(),
-                status.getReasonPhrase(),
-                "Ocorreu um erro interno no servidor. Por favor, tente novamente mais tarde.",
-                request.getRequestURI());
-        return new ResponseEntity<>(erro, status);
-    }
+                List<String> details = List.of(
+                                "Um erro inesperado ocorreu. Por favor, entre em contato com o suporte e forneça o ID do erro: "
+                                                + errorId);
+
+                ErroPadraoDTO erro = new ErroPadraoDTO(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                "Ocorreu um erro interno no servidor.",
+                                request.getRequestURI(),
+                                details);
+                return new ResponseEntity<>(erro, status);
+        }
 }
