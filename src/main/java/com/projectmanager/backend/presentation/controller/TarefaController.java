@@ -2,9 +2,13 @@ package com.projectmanager.backend.presentation.controller;
 
 import com.projectmanager.backend.application.dto.TarefaCadastroDTO;
 import com.projectmanager.backend.application.dto.TarefaDTO;
+import com.projectmanager.backend.application.dto.TarefaHistoricoDTO;
 import com.projectmanager.backend.application.dto.TarefaUpdateDTO;
 import com.projectmanager.backend.application.service.TarefaService;
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,5 +56,11 @@ public class TarefaController {
     public ResponseEntity<Void> deletarTarefa(@PathVariable Long id) {
         tarefaService.deletarTarefa(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{tarefaId}/historico")
+    public ResponseEntity<List<TarefaHistoricoDTO>> getHistoricoDaTarefa(@PathVariable Long tarefaId) {
+        List<TarefaHistoricoDTO> historico = tarefaService.listarHistoricoPorTarefa(tarefaId);
+        return ResponseEntity.ok(historico);
     }
 }
