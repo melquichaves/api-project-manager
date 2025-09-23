@@ -143,6 +143,16 @@ public class Tarefa {
         this.status = StatusTarefa.CANCELADA;
     }
 
+    public void reabrir() {
+        if (this.status == StatusTarefa.CANCELADA || this.status == StatusTarefa.CONCLUIDA) {
+            this.status = StatusTarefa.PENDENTE;
+            this.dataInicioReal = null; // Limpa a data de início real ao reabrir
+            this.dataFimReal = null;     // Limpa a data de fim real ao reabrir
+        } else {
+            throw new IllegalStateException("A tarefa não pode ser reaberta pois não está cancelada ou concluída.");
+        }
+    }
+
     // --- equals e hashCode ---
     @Override
     public boolean equals(Object o) {

@@ -95,13 +95,24 @@ public class TarefaService {
         return convertToDto(tarefaRepository.save(tarefa));
     }
 
-    @Transactional
+        @Transactional
     public TarefaDTO cancelarTarefa(Long tarefaId) {
         Tarefa tarefa = tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Tarefa", tarefaId));
         tarefa.cancelar();
 
         registrarHistorico(tarefa, "Status alterado para CANCELADA.");
+
+        return convertToDto(tarefaRepository.save(tarefa));
+    }
+
+    @Transactional
+    public TarefaDTO reabrirTarefa(Long tarefaId) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Tarefa", tarefaId));
+        tarefa.reabrir(); // Chama o método de domínio para reabrir a tarefa
+
+        registrarHistorico(tarefa, "Status alterado para PENDENTE (Tarefa reaberta).");
 
         return convertToDto(tarefaRepository.save(tarefa));
     }

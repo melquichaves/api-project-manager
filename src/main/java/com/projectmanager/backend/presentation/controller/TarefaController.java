@@ -40,9 +40,15 @@ public class TarefaController {
         return ResponseEntity.ok(tarefaAtualizada);
     }
 
-    @PostMapping("/{id}/cancelar")
+        @PostMapping("/{id}/cancelar")
     public ResponseEntity<TarefaDTO> cancelarTarefa(@PathVariable Long id) {
         TarefaDTO tarefaAtualizada = tarefaService.cancelarTarefa(id);
+        return ResponseEntity.ok(tarefaAtualizada);
+    }
+
+    @PutMapping("/{id}/reabrir")
+    public ResponseEntity<TarefaDTO> reabrirTarefa(@PathVariable Long id) {
+        TarefaDTO tarefaAtualizada = tarefaService.reabrirTarefa(id);
         return ResponseEntity.ok(tarefaAtualizada);
     }
 
