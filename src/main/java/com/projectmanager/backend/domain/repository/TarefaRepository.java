@@ -11,4 +11,7 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
     // Método para buscar todas as tarefas associadas a um projeto
     List<Tarefa> findByProjetoId(Long projetoId);
+
+    // Método para buscar todas as tarefas associadas a um responsável
+    List<Tarefa> findByResponsavelId(Long responsavelId);
 }

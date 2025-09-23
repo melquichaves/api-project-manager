@@ -2,7 +2,9 @@ package com.projectmanager.backend.application.service;
 
 import com.projectmanager.backend.application.dto.UsuarioCadastroDTO;
 import com.projectmanager.backend.application.dto.UsuarioDTO;
+import com.projectmanager.backend.domain.model.Tarefa;
 import com.projectmanager.backend.domain.model.Usuario;
+import com.projectmanager.backend.domain.repository.TarefaRepository;
 import com.projectmanager.backend.domain.repository.UsuarioRepository;
 import com.projectmanager.backend.infrastructure.exception.ConflitoDeDadosException;
 import com.projectmanager.backend.infrastructure.exception.RecursoNaoEncontradoException;
@@ -13,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,6 +24,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private TarefaRepository tarefaRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -108,11 +114,23 @@ public class UsuarioService {
         return convertToDto(updatedUsuario);
     }
 
+    @Transactional
     public void deletarUsuario(Long id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Usuário", id);
+        // Verifica se o usuário existe
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário", id));
+
+        // Encontra todas as tarefas onde este usuário é o responsável
+        List<Tarefa> tarefasDoUsuario = tarefaRepository.findByResponsavelId(id);
+
+        // Remove o responsável das tarefas
+        for (Tarefa tarefa : tarefasDoUsuario) {
+            tarefa.setResponsavel(null);
+            tarefaRepository.save(tarefa);
         }
-        usuarioRepository.deleteById(id);
+
+        // Agora pode deletar o usuário
+        usuarioRepository.delete(usuario);
     }
 
     private UsuarioDTO convertToDto(Usuario usuario) {
