@@ -18,10 +18,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Habilita anotações como @PreAuthorize
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -38,22 +44,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 1. HABILITA E CONFIGURA O CORS USANDO O BEAN ABAIXO
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // 2. Desabilita o CSRF (mantém como estava)
                 .csrf(AbstractHttpConfigurer::disable)
+
+                // 3. Configura as regras de autorização
                 .authorizeHttpRequests(authorize -> authorize
-                        // PERMITE o endpoint de login
                         .requestMatchers("/api/auth/login").permitAll()
-
-                        // PERMITE o cadastro de um novo usuário (APENAS o método POST)
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
-
-                        // QUALQUER OUTRA REQUISIÇÃO (incluindo GET, PUT, DELETE para /api/usuarios)
-                        // EXIGE AUTENTICAÇÃO
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // 4. BEAN DE CONFIGURAÇÃO DO CORS
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        return source;
     }
 
     @Bean
