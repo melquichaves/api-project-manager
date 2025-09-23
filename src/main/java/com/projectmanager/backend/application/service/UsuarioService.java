@@ -10,6 +10,8 @@ import com.projectmanager.backend.utils.Validators;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +24,22 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    public UsuarioDTO getCurrentUser() {
+        // Obter o usuário autenticado do contexto de segurança
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username;
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
+        Usuario usuario = usuarioRepository.findByLogin(username)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado", 0L));
+        return convertToDto(usuario);
+    }
 
     public UsuarioDTO cadastrarUsuario(UsuarioCadastroDTO dto) {
         if (usuarioRepository.existsByLogin(dto.getLogin())) {

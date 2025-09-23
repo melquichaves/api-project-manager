@@ -50,4 +50,10 @@ public class UsuarioController {
         usuarioService.deletarUsuario(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDTO> getCurrentUser() {
+        UsuarioDTO usuario = usuarioService.getCurrentUser();
+        return ResponseEntity.ok(usuario);
+    }
 }
