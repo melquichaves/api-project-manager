@@ -2,7 +2,11 @@ package com.projectmanager.backend.domain.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.OneToMany;
 
 @Entity
 @Table(name = "tarefas")
@@ -34,6 +38,9 @@ public class Tarefa {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "projeto_id", nullable = false)
     private Projeto projeto;
+
+    @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TarefaHistorico> historico = new HashSet<>();
 
     public Tarefa() {
         // Construtor padrão
@@ -118,6 +125,14 @@ public class Tarefa {
 
     public void setProjeto(Projeto projeto) {
         this.projeto = projeto;
+    }
+
+    public Set<TarefaHistorico> getHistorico() {
+        return historico;
+    }
+
+    public void setHistorico(Set<TarefaHistorico> historico) {
+        this.historico = historico;
     }
 
     // --- Métodos de Domínio ---

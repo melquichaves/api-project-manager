@@ -5,6 +5,8 @@ import java.time.LocalDate; // Usando LocalDate, que é mais moderno que java.ut
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "projetos")
@@ -34,13 +36,17 @@ public class Projeto {
     private StatusProjeto status;
 
     @ManyToOne(fetch = FetchType.LAZY) // Um projeto tem um responsável
-    @JoinColumn(name = "responsavel_id", nullable = false)
+    @JoinColumn(name = "responsavel_id", nullable = true)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.SET_NULL)
     private Usuario responsavel;
 
     // NOVO RELACIONAMENTO: Lado "dono" da relação Projeto-Equipe
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "projeto_equipes", joinColumns = @JoinColumn(name = "projeto_id"), inverseJoinColumns = @JoinColumn(name = "equipe_id"))
     private Set<Equipe> equipes = new HashSet<>();
+
+    @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Tarefa> tarefas = new HashSet<>();
 
     public Projeto() {
         // Construtor Padrão
