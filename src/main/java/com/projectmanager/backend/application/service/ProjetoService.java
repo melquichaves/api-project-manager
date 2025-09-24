@@ -205,6 +205,20 @@ public class ProjetoService {
         dto.setId(equipe.getId());
         dto.setNome(equipe.getNome());
         dto.setDescricao(equipe.getDescricao());
+
+        if (equipe.getMembros() != null) {
+            List<UsuarioDTO> membrosDto = equipe.getMembros().stream()
+                    .map(membro -> new UsuarioDTO(
+                            membro.getId(),
+                            membro.getNomeCompleto(),
+                            membro.getCpf(),
+                            membro.getEmail(),
+                            membro.getCargo(),
+                            membro.getLogin(),
+                            membro.getPerfil()))
+                    .toList();
+            dto.setMembros(membrosDto);
+        }
         return dto;
     }
 }

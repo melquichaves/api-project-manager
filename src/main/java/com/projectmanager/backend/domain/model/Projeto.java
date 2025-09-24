@@ -5,8 +5,7 @@ import java.time.LocalDate; // Usando LocalDate, que é mais moderno que java.ut
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "projetos")
@@ -41,6 +40,7 @@ public class Projeto {
     private Usuario responsavel;
 
     // NOVO RELACIONAMENTO: Lado "dono" da relação Projeto-Equipe
+    @JsonManagedReference
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "projeto_equipes", joinColumns = @JoinColumn(name = "projeto_id"), inverseJoinColumns = @JoinColumn(name = "equipe_id"))
     private Set<Equipe> equipes = new HashSet<>();

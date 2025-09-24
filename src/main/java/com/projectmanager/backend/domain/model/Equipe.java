@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "equipes")
@@ -20,7 +21,7 @@ public class Equipe {
     private String descricao;
 
     // Relacionamento Muitos-para-Muitos com Usuario
-    @ManyToMany(fetch = FetchType.LAZY)
+        @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "equipe_membros", // Nome da tabela de junção
             joinColumns = @JoinColumn(name = "equipe_id"), // Coluna que se refere a Equipe
             inverseJoinColumns = @JoinColumn(name = "usuario_id") // Coluna que se refere a Usuario
@@ -28,6 +29,7 @@ public class Equipe {
     private Set<Usuario> membros = new HashSet<>(); // Usar Set é uma boa prática para evitar duplicatas
 
     // Relacionamento Muitos-para-Muitos com Projeto (será o lado inverso)
+    @JsonBackReference
     @ManyToMany(mappedBy = "equipes")
     private Set<Projeto> projetos = new HashSet<>();
 

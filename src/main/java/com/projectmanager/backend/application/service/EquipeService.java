@@ -81,10 +81,13 @@ public class EquipeService {
 
     @Transactional
     public void deletarEquipe(Long id) {
-        if (!equipeRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Equipe", id);
-        }
-        equipeRepository.deleteById(id);
+        Equipe equipe = equipeRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Equipe", id));
+
+        // Remove a equipe de todos os projetos associados
+        equipe.getProjetos().forEach(projeto -> projeto.removerEquipe(equipe));
+
+        equipeRepository.delete(equipe);
     }
 
     private EquipeDTO convertToDto(Equipe equipe) {
