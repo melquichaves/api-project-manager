@@ -68,9 +68,33 @@ public class ProjetoController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{projetoId}/tarefas")
+        @GetMapping("/{projetoId}/tarefas")
     public ResponseEntity<List<TarefaDTO>> listarTarefasDoProjeto(@PathVariable Long projetoId) {
         List<TarefaDTO> tarefas = tarefaService.listarTarefasPorProjeto(projetoId);
         return ResponseEntity.ok(tarefas);
+    }
+
+    @PostMapping("/{id}/iniciar")
+    public ResponseEntity<ProjetoDTO> iniciarProjeto(@PathVariable Long id) {
+        ProjetoDTO projetoAtualizado = projetoService.iniciarProjeto(id);
+        return ResponseEntity.ok(projetoAtualizado);
+    }
+
+    @PostMapping("/{id}/concluir")
+    public ResponseEntity<ProjetoDTO> concluirProjeto(@PathVariable Long id) {
+        ProjetoDTO projetoAtualizado = projetoService.concluirProjeto(id);
+        return ResponseEntity.ok(projetoAtualizado);
+    }
+
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<ProjetoDTO> cancelarProjeto(@PathVariable Long id) {
+        ProjetoDTO projetoAtualizado = projetoService.cancelarProjeto(id);
+        return ResponseEntity.ok(projetoAtualizado);
+    }
+
+    @PutMapping("/{id}/reabrir")
+    public ResponseEntity<ProjetoDTO> reabrirProjeto(@PathVariable Long id) {
+        ProjetoDTO projetoAtualizado = projetoService.reabrirProjeto(id);
+        return ResponseEntity.ok(projetoAtualizado);
     }
 }

@@ -130,6 +130,41 @@ public class Projeto {
         equipe.getProjetos().remove(this);
     }
 
+    // --- Métodos de Domínio para Status do Projeto ---
+    public void iniciar() {
+        if (this.status == StatusProjeto.PLANEJADO) {
+            this.status = StatusProjeto.EM_ANDAMENTO;
+        } else {
+            throw new IllegalStateException("O projeto não pode ser iniciado pois não está planejado.");
+        }
+    }
+
+    public void concluir() {
+        if (this.status == StatusProjeto.EM_ANDAMENTO) {
+            this.status = StatusProjeto.CONCLUIDO;
+            this.dataRealFim = LocalDate.now();
+        } else {
+            throw new IllegalStateException("O projeto não pode ser concluído pois não está em andamento.");
+        }
+    }
+
+    public void cancelar() {
+        if (this.status == StatusProjeto.PLANEJADO || this.status == StatusProjeto.EM_ANDAMENTO) {
+            this.status = StatusProjeto.CANCELADO;
+        } else {
+            throw new IllegalStateException("O projeto não pode ser cancelado pois já está concluído ou cancelado.");
+        }
+    }
+
+    public void reabrir() {
+        if (this.status == StatusProjeto.CANCELADO || this.status == StatusProjeto.CONCLUIDO) {
+            this.status = StatusProjeto.PLANEJADO;
+            this.dataRealFim = null; // Limpa a data de fim real ao reabrir
+        } else {
+            throw new IllegalStateException("O projeto não pode ser reaberto pois não está cancelado ou concluído.");
+        }
+    }
+
     // --- equals e hashCode ---
     @Override
     public boolean equals(Object o) {

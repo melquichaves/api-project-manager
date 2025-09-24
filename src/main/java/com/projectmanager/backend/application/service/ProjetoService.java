@@ -58,11 +58,43 @@ public class ProjetoService {
         return convertToDto(projeto);
     }
 
-    @Transactional(readOnly = true)
+        @Transactional(readOnly = true)
     public List<ProjetoDTO> listarTodos() {
         return projetoRepository.findAll().stream()
                 .map(this::convertToDto)
                 .toList();
+    }
+
+    @Transactional
+    public ProjetoDTO iniciarProjeto(Long id) {
+        Projeto projeto = projetoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto", id));
+        projeto.iniciar();
+        return convertToDto(projetoRepository.save(projeto));
+    }
+
+    @Transactional
+    public ProjetoDTO concluirProjeto(Long id) {
+        Projeto projeto = projetoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto", id));
+        projeto.concluir();
+        return convertToDto(projetoRepository.save(projeto));
+    }
+
+    @Transactional
+    public ProjetoDTO cancelarProjeto(Long id) {
+        Projeto projeto = projetoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto", id));
+        projeto.cancelar();
+        return convertToDto(projetoRepository.save(projeto));
+    }
+
+    @Transactional
+    public ProjetoDTO reabrirProjeto(Long id) {
+        Projeto projeto = projetoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto", id));
+        projeto.reabrir();
+        return convertToDto(projetoRepository.save(projeto));
     }
 
     @Transactional
